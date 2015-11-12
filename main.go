@@ -3,6 +3,7 @@ package main
 import serial "github.com/tarm/serial"
 import "log"
 import "time"
+import "os"
 
 func readSerial(p serial.Port) string {
 	buf := make([]byte, 128)
@@ -33,6 +34,8 @@ func sendCommand(p serial.Port, cmd string) (out string, err error) {
 
 
 func main() {
+	log.Printf("%s\n", os.Args[1])
+	
 	//c := &serial.Config{Name: "/dev/ttyUSB0", Baud: 115200}
 	c := &serial.Config{Name: "/dev/ttyUSB0", Baud: 115200, ReadTimeout: time.Second * 5}
 	s, err := serial.OpenPort(c)
@@ -42,11 +45,11 @@ func main() {
 	}
 
 
-	res, err := sendCommand(*s, "print(mcu.info())")
+	res, err := sendCommand(*s, os.Args[1])
 	if err != nil {
 		log.Printf("comms error")
 		log.Fatal(err)
 	}
-	log.Printf("Cmd: print(mcu:info())\n")
+
 	log.Printf("Result: %#v\n", res)
 }
