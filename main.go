@@ -1,19 +1,23 @@
 package main
 
+import (
+	"strings"
+	"log"
+	"time"
+	"os"
+)
+
 import serial "github.com/tarm/serial"
-import "log"
-import "time"
-import "os"
 
 func readSerial(p serial.Port) string {
-	buf := make([]byte, 128)
+	buf := make([]byte, 1024)
 	r, err := p.Read(buf)
 	if err != nil {
 		 log.Printf("Can't read from serial port\n")
 		 log.Fatal(err)
 	 }
 	
-	return string(buf[:r])
+	return strings.TrimSpace(string(buf[:r]))
 }
 
 func writeSerial(p serial.Port, s string) (err error){
@@ -45,11 +49,27 @@ func main() {
 	}
 
 
-	res, err := sendCommand(*s, os.Args[1])
-	if err != nil {
-		log.Printf("comms error")
-		log.Fatal(err)
-	}
+	//res, err := sendCommand(*s, os.Args[1])
+	//if err != nil {
+	//	log.Printf("comms error")
+	//	log.Fatal(err)
+	//}
 
-	log.Printf("Result: %#v\n", res)
+	//log.Printf("Result: %#v\n", res)
+
+	log.Printf("Listing files...\n")
+	res, _ := sendCommand(*s, "file.slist()")
+	log.Printf("Res: %s\n", res)
+
+	log.Printf("Writing file...\n")
+	_, _ = sendCommand(*s, "file.open('test.lua', 'w+')")
+	_, _ = sendCommand(*s, "file.write(\"print('hello world')\")")
+	_, _ = sendCommand(*s, "file.close()")
+
+	log.Printf("Listing files...\n")
+	res, _ = sendCommand(*s, "file.slist()")
+	log.Printf("Res: %s\n", res)
+
+	res, _ = sendCommand(*s, "dofile('test.lua')")
+	log.Printf("Res: %s\n", res)
 }
