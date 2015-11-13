@@ -3,11 +3,16 @@ package main
 import (
 	"strings"
 	"log"
+	"fmt"
 	"time"
 	"os"
+	"bufio"
+	"path/filepath"
 )
 
-import serial "github.com/tarm/serial"
+import (
+	serial "github.com/tarm/serial"
+)
 
 func readSerial(p serial.Port) string {
 	buf := make([]byte, 1024)
@@ -36,6 +41,35 @@ func sendCommand(p serial.Port, cmd string) (out string, err error) {
 	return out, err
 }
 
+func uploadFile(p serial.Port, filename string) (err error) {
+	log.Printf("Uploading file: %s\n", filename)
+	_, destFileName := filepath.Split(filename)
+	log.Printf("Destination name: %s\n", destFileName)
+
+	file, err := os.Open(filename)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer file.Close()
+	
+	log.Printf("Writing file...\n")
+	_, _ = sendCommand(p, fmt.Sprintf("file.open('%s', 'w+')", destFileName))
+	
+	scanner := bufio.NewScanner(file)
+	for scanner.Scan() {
+		log.Print(scanner.Text())
+		//_, _ = sendCommand(p, fmt.Sprintf("file.write(\"%s\")", scanner.Text()))
+		fmt.Sprintf("file.write(\"%s\")", scanner.Text())
+	}
+
+	if err := scanner.Err(); err != nil {
+		log.Fatal(err)
+	}
+
+	_, _ = sendCommand(p, "file.close()")
+
+	return err
+}
 
 func main() {
 	log.Printf("%s\n", os.Args[1])
@@ -49,27 +83,20 @@ func main() {
 	}
 
 
-	//res, err := sendCommand(*s, os.Args[1])
-	//if err != nil {
-	//	log.Printf("comms error")
-	//	log.Fatal(err)
-	//}
+	err = uploadFile(*s, os.Args[1])
+	if err != nil {
+		log.Printf("comms error")
+		log.Fatal(err)
+	}
 
 	//log.Printf("Result: %#v\n", res)
+	
+	//log.Printf("Listing files...\n")
+	//res, _ := sendCommand(*s, "file.slist()")
+	//log.Printf("Res: %s\n", res)
 
 	log.Printf("Listing files...\n")
 	res, _ := sendCommand(*s, "file.slist()")
 	log.Printf("Res: %s\n", res)
 
-	log.Printf("Writing file...\n")
-	_, _ = sendCommand(*s, "file.open('test.lua', 'w+')")
-	_, _ = sendCommand(*s, "file.write(\"print('hello world')\")")
-	_, _ = sendCommand(*s, "file.close()")
-
-	log.Printf("Listing files...\n")
-	res, _ = sendCommand(*s, "file.slist()")
-	log.Printf("Res: %s\n", res)
-
-	res, _ = sendCommand(*s, "dofile('test.lua')")
-	log.Printf("Res: %s\n", res)
 }
