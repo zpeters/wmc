@@ -101,10 +101,82 @@ var cmdVersion = &cobra.Command{
 	},
 }
 
+var cmdTest = &cobra.Command{
+	Use: "test",
+	Short: "Test our serial connection",
+	Run: func(cmd *cobra.Command, args []string) {
+		s := openSerial()
+		res, err := sendCommand(*s, "print(mcu.ver())")
+		if err != nil {
+			log.Printf("Comm error")
+			log.Fatal(err)
+		}
+		if strings.Contains(res, "WiFiMCU") {
+			log.Printf("Serial connection good")
+		} else {
+			log.Printf("Cannot communicate with device")
+		}
+	},
+}
+
+var cmdList = &cobra.Command{
+	Use: "list",
+	Short: "List all files on device",
+	Run: func(cmd *cobra.Command, args []string) {
+		s := openSerial()
+		res, err := sendCommand(*s, "file.slist()")
+		if err != nil {
+			log.Printf("Comm error")
+			log.Fatal(err)
+		}
+		fmt.Printf("File list...\n")
+		fmt.Printf("%s\n", res)
+	},
+}
+
+var cmdGet = &cobra.Command{
+	Use: "",
+	Short: "",
+	Run: func(cmd *cobra.Command, args []string) {
+		//s := openSerial()
+		//res, err := sendCommand(*s, "print(mcu.ver())")
+		//if err != nil {
+		//	log.Printf("Comm error")
+		//	log.Fatal(err)
+		//}
+	},
+}
+
+var cmdPut = &cobra.Command{
+	Use: "",
+	Short: "",
+	Run: func(cmd *cobra.Command, args []string) {
+		//s := openSerial()
+		//res, err := sendCommand(*s, "print(mcu.ver())")
+		//if err != nil {
+		//	log.Printf("Comm error")
+		//	log.Fatal(err)
+		//}
+	},
+}
+
+var cmdRm = &cobra.Command{
+	Use: "",
+	Short: "",
+	Run: func(cmd *cobra.Command, args []string) {
+		//s := openSerial()
+		//res, err := sendCommand(*s, "print(mcu.ver())")
+		//if err != nil {
+		//	log.Printf("Comm error")
+		//	log.Fatal(err)
+		//}
+	},
+}
+
 
 func main() {
 	var rootCmd = &cobra.Command{}
-	rootCmd.AddCommand(cmdVersion)
+	rootCmd.AddCommand(cmdVersion, cmdTest, cmdList, cmdGet, cmdPut, cmdRm)
 	rootCmd.Execute()
 
 }
