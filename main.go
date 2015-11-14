@@ -12,8 +12,11 @@ import (
 
 import (
 	serial "github.com/tarm/serial"
+	"github.com/spf13/cobra"
 )
 
+
+// Functions
 func readSerial(p serial.Port) string {
 	buf := make([]byte, 1024)
 	r, err := p.Read(buf)
@@ -71,9 +74,7 @@ func uploadFile(p serial.Port, filename string) (err error) {
 	return err
 }
 
-func main() {
-	log.Printf("%s\n", os.Args[1])
-	
+func openSerial() *serial.Port {
 	//c := &serial.Config{Name: "/dev/ttyUSB0", Baud: 115200}
 	c := &serial.Config{Name: "/dev/ttyUSB0", Baud: 115200, ReadTimeout: time.Second * 5}
 	s, err := serial.OpenPort(c)
@@ -81,22 +82,29 @@ func main() {
 		log.Printf("Can't open serial port\n")
 		log.Fatal(err)
 	}
-
-
-	err = uploadFile(*s, os.Args[1])
-	if err != nil {
-		log.Printf("comms error")
-		log.Fatal(err)
-	}
-
-	//log.Printf("Result: %#v\n", res)
+	return s
 	
-	//log.Printf("Listing files...\n")
-	//res, _ := sendCommand(*s, "file.slist()")
-	//log.Printf("Res: %s\n", res)
+}
 
-	log.Printf("Listing files...\n")
-	res, _ := sendCommand(*s, "file.slist()")
-	log.Printf("Res: %s\n", res)
+// Commands
+var cmdVersion = &cobra.Command{
+	Use: "version",
+	Short: "Get the current version",
+	Run: func(cmd *cobra.Command, args []string) {
+		s := openSerial()
+		res, err := sendCommand(*s, "print(mcu.ver())")
+		if err != nil {
+			log.Printf("Comm error")
+			log.Fatal(err)
+		}
+		log.Printf("Result: %s", res)
+	},
+}
+
+
+func main() {
+	var rootCmd = &cobra.Command{}
+	rootCmd.AddCommand(cmdVersion)
+	rootCmd.Execute()
 
 }
