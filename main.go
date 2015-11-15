@@ -19,11 +19,7 @@ import (
 // Functions
 func readSerial(p serial.Port) string {
 	buf := make([]byte, 1024)
-	r, err := p.Read(buf)
-	if err != nil {
-		 log.Printf("Can't read from serial port\n")
-		 log.Fatal(err)
-	 }
+	r, _ := p.Read(buf)
 	
 	return strings.TrimSpace(string(buf[:r]))
 }
@@ -31,7 +27,6 @@ func readSerial(p serial.Port) string {
 func writeSerial(p serial.Port, s string) (err error){
 	_, err = p.Write([]byte(s + "\n"))
 	if err != nil {
-		log.Printf("Can't send command\n")
 		log.Fatal(err)
 	}
 	return err
@@ -41,6 +36,7 @@ func sendCommand(p serial.Port, cmd string) (out string, err error) {
 	err = writeSerial(p, cmd)
 	_ = readSerial(p)
 	out = readSerial(p)
+
 	return out, err
 }
 
@@ -74,17 +70,27 @@ func uploadFile(p serial.Port, filename string) (err error) {
 	return err
 }
 
+func flushSerial(p serial.Port) {
+	res := "flush"
+	// read until we get no response
+	for res != "" {
+		res = readSerial(p)
+	}	
+}
+
 func openSerial() *serial.Port {
 	//c := &serial.Config{Name: "/dev/ttyUSB0", Baud: 115200}
-	c := &serial.Config{Name: "/dev/ttyUSB0", Baud: 115200, ReadTimeout: time.Second * 5}
+	c := &serial.Config{Name: "/dev/ttyUSB0", Baud: 115200, ReadTimeout: time.Second * 1}
 	s, err := serial.OpenPort(c)
 	if err != nil {
-		log.Printf("Can't open serial port\n")
 		log.Fatal(err)
 	}
-	return s
+
+	flushSerial(*s)
 	
+	return s	
 }
+
 
 // Commands
 var cmdVersion = &cobra.Command{
@@ -94,7 +100,6 @@ var cmdVersion = &cobra.Command{
 		s := openSerial()
 		res, err := sendCommand(*s, "print(mcu.ver())")
 		if err != nil {
-			log.Printf("Comm error")
 			log.Fatal(err)
 		}
 		log.Printf("Result: %s", res)
@@ -108,7 +113,6 @@ var cmdTest = &cobra.Command{
 		s := openSerial()
 		res, err := sendCommand(*s, "print(mcu.ver())")
 		if err != nil {
-			log.Printf("Comm error")
 			log.Fatal(err)
 		}
 		if strings.Contains(res, "WiFiMCU") {
@@ -126,7 +130,6 @@ var cmdList = &cobra.Command{
 		s := openSerial()
 		res, err := sendCommand(*s, "file.slist()")
 		if err != nil {
-			log.Printf("Comm error")
 			log.Fatal(err)
 		}
 		fmt.Printf("File list...\n")
@@ -161,15 +164,16 @@ var cmdPut = &cobra.Command{
 }
 
 var cmdRm = &cobra.Command{
-	Use: "",
-	Short: "",
+	Use: "rm",
+	Short: "Remove a file",
 	Run: func(cmd *cobra.Command, args []string) {
-		//s := openSerial()
-		//res, err := sendCommand(*s, "print(mcu.ver())")
-		//if err != nil {
-		//	log.Printf("Comm error")
-		//	log.Fatal(err)
-		//}
+		log.Printf("removing %s\n", args[0])
+		s := openSerial()
+		cmdString := fmt.Sprintf("file.remove(\"%s\")", args[0])
+		_, err := sendCommand(*s, cmdString)
+		if err != nil {
+			log.Fatal(err)
+		}
 	},
 }
 
@@ -177,6 +181,7 @@ var cmdRm = &cobra.Command{
 func main() {
 	var rootCmd = &cobra.Command{}
 	rootCmd.AddCommand(cmdVersion, cmdTest, cmdList, cmdGet, cmdPut, cmdRm)
+	rootCmd.AddCommand(cmdRead)
 	rootCmd.Execute()
 
 }
