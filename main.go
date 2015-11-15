@@ -57,7 +57,7 @@ func uploadFile(p serial.Port, filename string) (err error) {
 	scanner := bufio.NewScanner(file)
 	for scanner.Scan() {
 		log.Print(scanner.Text())
-		//_, _ = sendCommand(p, fmt.Sprintf("file.write(\"%s\")", scanner.Text()))
+		_, _ = sendCommand(p, fmt.Sprintf("file.write(\"%s\")", scanner.Text()))
 		fmt.Sprintf("file.write(\"%s\")", scanner.Text())
 	}
 
@@ -138,28 +138,53 @@ var cmdList = &cobra.Command{
 }
 
 var cmdGet = &cobra.Command{
-	Use: "",
-	Short: "",
+	Use: "get [filename]",
+	Short: "Get a file from the device (print to screen)",
 	Run: func(cmd *cobra.Command, args []string) {
-		//s := openSerial()
-		//res, err := sendCommand(*s, "print(mcu.ver())")
-		//if err != nil {
-		//	log.Printf("Comm error")
-		//	log.Fatal(err)
-		//}
+		p := openSerial()
+		// open the file
+		cmdString := fmt.Sprintf("ret=file.open(\"%s\", \"r\")", args[0])
+		_, err := sendCommand(*p, cmdString)
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		// open the file
+		cmdString = fmt.Sprintf("data=file.read()")
+		_, err = sendCommand(*p, cmdString)
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		// close the file
+		cmdString = fmt.Sprintf("ret=file.close()")
+		_, err = sendCommand(*p, cmdString)
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		// print the contents of the file
+		cmdString = fmt.Sprintf("print(data)")
+		res, err := sendCommand(*p, cmdString)
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		fmt.Printf("%s\n", res)
+
+		
 	},
 }
 
 var cmdPut = &cobra.Command{
-	Use: "",
-	Short: "",
+	Use: "put [filename]",
+	Short: "Send a file to the device",
 	Run: func(cmd *cobra.Command, args []string) {
-		//s := openSerial()
-		//res, err := sendCommand(*s, "print(mcu.ver())")
-		//if err != nil {
-		//	log.Printf("Comm error")
-		//	log.Fatal(err)
-		//}
+		p := openSerial()
+		err := uploadFile(*p, args[0])
+		if err != nil {
+			log.Fatal(err)
+		}
 	},
 }
 
@@ -181,7 +206,6 @@ var cmdRm = &cobra.Command{
 func main() {
 	var rootCmd = &cobra.Command{}
 	rootCmd.AddCommand(cmdVersion, cmdTest, cmdList, cmdGet, cmdPut, cmdRm)
-	rootCmd.AddCommand(cmdRead)
 	rootCmd.Execute()
 
 }
