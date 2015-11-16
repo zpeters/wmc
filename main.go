@@ -13,6 +13,7 @@ import (
 import (
 	serial "github.com/tarm/serial"
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 )
 
 
@@ -80,7 +81,7 @@ func flushSerial(p serial.Port) {
 
 func openSerial() *serial.Port {
 	//c := &serial.Config{Name: "/dev/ttyUSB0", Baud: 115200}
-	c := &serial.Config{Name: "/dev/ttyUSB0", Baud: 115200, ReadTimeout: time.Second * 1}
+	c := &serial.Config{Name: viper.GetString("serial"), Baud: 115200, ReadTimeout: time.Second * 1}
 	s, err := serial.OpenPort(c)
 	if err != nil {
 		log.Fatal(err)
@@ -94,7 +95,7 @@ func openSerial() *serial.Port {
 
 // Commands
 var cmdVersion = &cobra.Command{
-	Use: "version",
+	Use: "ver",
 	Short: "Get the current version",
 	Run: func(cmd *cobra.Command, args []string) {
 		s := openSerial()
@@ -106,25 +107,8 @@ var cmdVersion = &cobra.Command{
 	},
 }
 
-var cmdTest = &cobra.Command{
-	Use: "test",
-	Short: "Test our serial connection",
-	Run: func(cmd *cobra.Command, args []string) {
-		s := openSerial()
-		res, err := sendCommand(*s, "print(mcu.ver())")
-		if err != nil {
-			log.Fatal(err)
-		}
-		if strings.Contains(res, "WiFiMCU") {
-			log.Printf("Serial connection good")
-		} else {
-			log.Printf("Cannot communicate with device")
-		}
-	},
-}
-
 var cmdList = &cobra.Command{
-	Use: "list",
+	Use: "ls",
 	Short: "List all files on device",
 	Run: func(cmd *cobra.Command, args []string) {
 		s := openSerial()
@@ -134,45 +118,6 @@ var cmdList = &cobra.Command{
 		}
 		fmt.Printf("File list...\n")
 		fmt.Printf("%s\n", res)
-	},
-}
-
-var cmdGet = &cobra.Command{
-	Use: "get [filename]",
-	Short: "Get a file from the device (print to screen)",
-	Run: func(cmd *cobra.Command, args []string) {
-		p := openSerial()
-		// open the file
-		cmdString := fmt.Sprintf("ret=file.open(\"%s\", \"r\")", args[0])
-		_, err := sendCommand(*p, cmdString)
-		if err != nil {
-			log.Fatal(err)
-		}
-
-		// open the file
-		cmdString = fmt.Sprintf("data=file.read()")
-		_, err = sendCommand(*p, cmdString)
-		if err != nil {
-			log.Fatal(err)
-		}
-
-		// close the file
-		cmdString = fmt.Sprintf("ret=file.close()")
-		_, err = sendCommand(*p, cmdString)
-		if err != nil {
-			log.Fatal(err)
-		}
-
-		// print the contents of the file
-		cmdString = fmt.Sprintf("print(data)")
-		res, err := sendCommand(*p, cmdString)
-		if err != nil {
-			log.Fatal(err)
-		}
-
-		fmt.Printf("%s\n", res)
-
-		
 	},
 }
 
@@ -202,10 +147,22 @@ var cmdRm = &cobra.Command{
 	},
 }
 
+var cmdConfig = &cobra.Command{
+	Use: "config",
+	Short: "Display current config",
+	Run: func(cmd *cobra.Command, args []string) {
+		fmt.Printf("WMC_SERIAL: %s\n", viper.Get("serial"))
+	},
+}
 
 func main() {
+	// setup our settings
+	viper.SetEnvPrefix("wmc")
+	viper.BindEnv("serial")
+	viper.SetDefault("serial", "/dev/ttyUSB0")
+	
 	var rootCmd = &cobra.Command{}
-	rootCmd.AddCommand(cmdVersion, cmdTest, cmdList, cmdGet, cmdPut, cmdRm)
+	rootCmd.AddCommand(cmdVersion, cmdList, cmdPut, cmdRm, cmdConfig)
 	rootCmd.Execute()
 
 }
