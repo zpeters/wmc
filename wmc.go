@@ -16,6 +16,7 @@ import (
 	"github.com/spf13/viper"
 )
 
+var Version = ""
 
 // Functions
 func readSerial(p serial.Port) string {
@@ -94,7 +95,7 @@ func openSerial() *serial.Port {
 
 
 // Commands
-var cmdVersion = &cobra.Command{
+var cmdWmcVersion = &cobra.Command{
 	Use: "ver",
 	Short: "Get the current version",
 	Run: func(cmd *cobra.Command, args []string) {
@@ -155,14 +156,25 @@ var cmdConfig = &cobra.Command{
 	},
 }
 
+var cmdVersion = &cobra.Command{
+	Use: "version",
+	Short: "Display wmc version",
+	Run: func(cmd *cobra.Command, args []string) {
+		fmt.Printf("Version: %#v\n", Version)
+	},
+}
+
+
 func main() {
+	fmt.Printf("Version: %s\n", Version)
+	
 	// setup our settings
 	viper.SetEnvPrefix("wmc")
 	viper.BindEnv("serial")
 	viper.SetDefault("serial", "/dev/ttyUSB0")
 	
 	var rootCmd = &cobra.Command{}
-	rootCmd.AddCommand(cmdVersion, cmdList, cmdPut, cmdRm, cmdConfig)
+	rootCmd.AddCommand(cmdWmcVersion, cmdList, cmdPut, cmdRm, cmdConfig, cmdVersion)
 	rootCmd.Execute()
 
 }
