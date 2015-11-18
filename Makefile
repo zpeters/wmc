@@ -21,9 +21,8 @@ clean:
 	rm bin/*
 
 cross:
-	# Not supported by tamr/serial yet
-	#echo "Building darwin-amd64..."
-	#GOOS="darwin" GOARCH="amd64" go build -ldflags="-X main.Version ${VERSION}" -o bin/wmc-mac-amd64-${VERSION}
+	echo "Building darwin-amd64..."
+	GOOS="darwin" GOARCH="amd64" go build -ldflags="-X main.Version ${VERSION}" -o bin/wmc-mac-amd64-${VERSION}
 
 	echo "Building windows-386..."
 	GOOS="windows" GOARCH="386" go build -ldflags="-X main.Version ${VERSION}" -o bin/wmc-32-${VERSION}.exe
