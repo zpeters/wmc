@@ -199,6 +199,19 @@ var cmdCommand = &cobra.Command{
 	},
 }
 
+var cmdRun = &cobra.Command{
+	Use:   "run",
+	Short: "Run the specified script on the WifiMCU",
+	Run: func(cmd *cobra.Command, args []string) {
+		s := openSerial()
+		res, err := sendCommand(*s, "dofile('"+args[0]+"')")
+		if err != nil {
+			log.Fatal(err)
+		}
+		fmt.Printf("%s\n", res)
+	},
+}
+
 func main() {
 	// setup our settings
 	viper.SetEnvPrefix("wmc")
@@ -213,7 +226,7 @@ wmc is a cross-platform command line utility for the WifiMCU Platform
 GPL Licensed source code, downloads and issue tracker at
 https://github.com/zpeters/wmc`,
 	}
-	rootCmd.AddCommand(cmdWmcVersion, cmdList, cmdPut, cmdRm, cmdConfig, cmdCommand, cmdRead)
+	rootCmd.AddCommand(cmdWmcVersion, cmdList, cmdPut, cmdRm, cmdConfig, cmdCommand, cmdRead, cmdRun)
 	rootCmd.Execute()
 
 }
