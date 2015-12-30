@@ -17,6 +17,7 @@ import (
 )
 
 var Version = ""
+var Verbose bool
 
 // Functions
 func cleanString(dirty string) string {
@@ -24,6 +25,9 @@ func cleanString(dirty string) string {
 	return clean
 }
 func readSerial(p serial.Port) string {
+	if Verbose {
+		log.Printf("Reading from serial '%v'\n", p)
+	}
 	buf := make([]byte, 1024)
 	r, _ := p.Read(buf)
 
@@ -31,6 +35,10 @@ func readSerial(p serial.Port) string {
 }
 
 func writeSerial(p serial.Port, s string) (err error) {
+	if Verbose {
+		log.Printf("Writing '%s' to serial '%v'\n", p, s)
+	}
+
 	_, err = p.Write([]byte(s + "\n"))
 	if err != nil {
 		log.Fatal(err)
@@ -39,6 +47,10 @@ func writeSerial(p serial.Port, s string) (err error) {
 }
 
 func sendCommand(p serial.Port, cmd string) (out string, err error) {
+	if Verbose {
+		log.Printf("Sending command '%s' to '%v'\n", p, cmd)
+	}
+
 	var res string
 
 	err = writeSerial(p, cmd)
@@ -58,8 +70,14 @@ func sendCommand(p serial.Port, cmd string) (out string, err error) {
 }
 
 func uploadFile(p serial.Port, filename string) (err error) {
+	if Verbose {
+		log.Printf("Uploading file: %s\n", filename)
+	}
 	fmt.Printf("Uploading file: %s\n", filename)
 	_, destFileName := filepath.Split(filename)
+	if Verbose {
+		log.Printf("Destination name: %s\n", destFileName)
+	}
 	fmt.Printf("Destination name: %s\n", destFileName)
 
 	file, err := os.Open(filename)
@@ -89,6 +107,9 @@ func uploadFile(p serial.Port, filename string) (err error) {
 }
 
 func flushSerial(p serial.Port) {
+	if Verbose {
+		log.Printf("Flushing port '%v'\n", p)
+	}
 	res := "flush"
 	// read until we get no response
 	for res != "" {
@@ -98,6 +119,9 @@ func flushSerial(p serial.Port) {
 
 func openSerial() *serial.Port {
 	//c := &serial.Config{Name: "/dev/ttyUSB0", Baud: 115200}
+	if Verbose {
+		log.Printf("Opening serial port '%s', Baud: 115200, Timeout: 1 second}", viper.GetString("serial"))
+	}
 	c := &serial.Config{Name: viper.GetString("serial"), Baud: 115200, ReadTimeout: time.Second * 1}
 	s, err := serial.OpenPort(c)
 	if err != nil {
@@ -169,6 +193,7 @@ var cmdConfig = &cobra.Command{
 	Short: "Display current config",
 	Run: func(cmd *cobra.Command, args []string) {
 		fmt.Printf("WMC_SERIAL: %s\n", viper.Get("serial"))
+		fmt.Printf("WMC_DEBUG: %s\n", viper.Get("debug"))
 	},
 }
 
@@ -240,6 +265,6 @@ GPL Licensed source code, downloads and issue tracker at
 https://github.com/zpeters/wmc`,
 	}
 	rootCmd.AddCommand(cmdWmcVersion, cmdList, cmdPut, cmdRm, cmdConfig, cmdCommand, cmdRead, cmdRun, cmdReboot)
+	rootCmd.PersistentFlags().BoolVarP(&Verbose, "verbose", "v", false, "verbose output")
 	rootCmd.Execute()
-
 }
