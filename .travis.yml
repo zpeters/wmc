@@ -1,0 +1,17 @@
+language: go
+sudo: false
+go:
+  - 1.6
+install:
+  - go get "github.com/spf13/cobra"
+  - go get "github.com/spf13/viper"
+  - go get "github.com/tarm/serial"
+  
+script:
+  - make
+notifications:
+  email:
+    recipients:
+      - zpeters@gmail.com
+    on_failure: always
+    on_success: always
