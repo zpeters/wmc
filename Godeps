@@ -1,0 +1,13 @@
+github.com/BurntSushi/toml f0aeabca5a127c4078abb8c8d64298b147264b55
+github.com/fsnotify/fsnotify 30411dbcefb7a1da7e84f75530ad3abe4011b4f8
+github.com/hashicorp/hcl 9a905a34e6280ce905da1a32344b25e81011197a
+github.com/magiconair/properties c265cfa48dda6474e208715ca93e987829f572f8
+github.com/mitchellh/mapstructure d2dd0262208475919e1a362f675cfc0e7c10e905
+github.com/spf13/cast 27b586b42e29bec072fe7379259cc719e1289da6
+github.com/spf13/cobra f368244301305f414206f889b1735a54cfc8bde8
+github.com/spf13/jwalterweatherman 33c24e77fb80341fe7130ee7c594256ff08ccc46
+github.com/spf13/pflag cb88ea77998c3f024757528e3305022ab50b43be
+github.com/spf13/viper d8a428b8a30606e1d0b355d91edf282609ade1a6
+github.com/tarm/serial 37be519d49878d0098e34fb614136b81e6c87861
+golang.org/x/sys d4feaf1a7e61e1d9e79e6c4e76c6349e9cab0a03
+gopkg.in/yaml.v2 a83829b6f1293c91addabc89d0571c246397bbf4
