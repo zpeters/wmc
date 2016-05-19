@@ -17,7 +17,7 @@ install:
   - go get "github.com/inconshreveable/mousetrap"
 script:
   - go build -v
-  - wmc config
+  - ./wmc config
 notifications:
   email:
     recipients:
